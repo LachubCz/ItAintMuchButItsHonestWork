@@ -17,11 +17,11 @@ def classificator_model():
 
     x = Conv2D(filters = 32, kernel_size = 3, strides = 2, padding = "same", activation="relu", data_format="channels_first")(inputs)
     x = MaxPooling2D(pool_size=(2, 2), strides=None, padding='valid', data_format="channels_first")(x)
-    x = Conv2D(filters = 32, kernel_size = 3, strides = 2, padding = "same", data_format="channels_first")(x)
+    x = Conv2D(filters = 64, kernel_size = 3, strides = 2, padding = "same", data_format="channels_first")(x)
     x = MaxPooling2D(pool_size=(2, 2), strides=None, padding='valid', data_format="channels_first")(x)
-    x = Conv2D(filters = 32, kernel_size = 3, strides = 2, padding = "same", data_format="channels_first")(x)
+    x = Conv2D(filters = 128, kernel_size = 3, strides = 2, padding = "same", data_format="channels_first")(x)
     x = MaxPooling2D(pool_size=(2, 2), strides=None, padding='valid', data_format="channels_first")(x)
-    x = Conv2D(filters = 32, kernel_size = 3, strides = 2, padding = "same", data_format="channels_first")(x)
+    x = Conv2D(filters = 256, kernel_size = 3, strides = 2, padding = "same", data_format="channels_first")(x)
     x = MaxPooling2D(pool_size=(2, 2), strides=None, padding='valid', data_format="channels_first")(x)
     x = Flatten()(x)
     x = Dense(128, activation="relu")(x)
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     random.seed(datetime.now())
     batch_size = 8
     trn_data_part = 0.7
-    trn_data = parse_data("./data/ground_truths_develop.csv", "./data/images/", "./data/ground_truth/")
+    trn_data = parse_data("./data/ground_truths_develop.csv", "./data/images/", "./data/ground_truths/")
     tst_data = []
     number_of_tst_data = int(len(trn_data)*(1-trn_data_part))
     print("Len trn_data: {}; Len trn_data: {}" .format(len(trn_data)-number_of_tst_data, number_of_tst_data))
@@ -69,6 +69,14 @@ if __name__ == '__main__':
 
     model = classificator_model()
     for i in range(10000):
-        model.fit(np.array(random.sample(trn_images, batch_size)), np.array(random.sample(trn_labels, batch_size)), 
-                  epochs=1, batch_size=batch_size, verbose=1,
-                  validation_data=(np.array(random.sample(tst_images, batch_size)), np.array(random.sample(tst_labels, batch_size))))
+        trn_indexes = random.sample(range(len(trn_labels)), batch_size)
+        tst_indexes = random.sample(range(len(tst_labels)), batch_size)
+
+        trn_img_batch = np.take(trn_images, trn_indexes, axis=0)
+        trn_lbl_batch = np.take(trn_labels, trn_indexes, axis=0)
+
+        tst_img_batch = np.take(tst_images, tst_indexes, axis=0)
+        tst_lbl_batch = np.take(tst_labels, tst_indexes, axis=0)
+
+        model.fit(trn_img_batch, trn_lbl_batch, epochs=1, batch_size=batch_size, verbose=1,
+                  validation_data=(tst_img_batch, tst_lbl_batch))

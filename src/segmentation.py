@@ -3,11 +3,28 @@ from segmentation_models.backbones import get_preprocessing
 from segmentation_models.losses import bce_jaccard_loss
 from segmentation_models.metrics import iou_score
 
+import sys
+from tools import parse_data
+
+
+
+g
+
+
+
+sys.exit(1)
+
+
+
+
 BACKBONE = 'resnet34'
 preprocess_input = get_preprocessing(BACKBONE)
 
+
+
+
 # load your data
-x_train, y_train, x_val, y_val = 
+x_train, y_train, x_val, y_val =1 
 
 # preprocess input
 x_train = preprocess_input(x_train)

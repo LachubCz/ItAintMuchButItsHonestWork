@@ -11,21 +11,21 @@ from tensorflow.keras.layers import Input, Dense, Flatten, BatchNormalization, A
 from tools import parse_data
 
 img_shape = (960, 960)
-classif_classes = 6
 
-def classificator_model(img_shape, classif_classes):
-    inputs = tf.keras.Input(shape=(1, 960, 960))
+def classificator_model():
+    inputs = tf.keras.Input(shape=(1, img_shape[0], img_shape[1]))
 
-    x = Conv2D(filters = 16, kernel_size = 5, strides = 2, padding = "same")(inputs)
+    x = Conv2D(filters = 32, kernel_size = 3, strides = 2, padding = "same", activation="relu", data_format="channels_first")(inputs)
     x = MaxPooling2D(pool_size=(2, 2), strides=None, padding='valid', data_format="channels_first")(x)
-    x = Conv2D(filters = 32, kernel_size = 5, strides = 2, padding = "same")(x)
+    x = Conv2D(filters = 32, kernel_size = 3, strides = 2, padding = "same", data_format="channels_first")(x)
     x = MaxPooling2D(pool_size=(2, 2), strides=None, padding='valid', data_format="channels_first")(x)
-    x = Conv2D(filters = 64, kernel_size = 5, strides = 2, padding = "same")(x)
+    x = Conv2D(filters = 32, kernel_size = 3, strides = 2, padding = "same", data_format="channels_first")(x)
     x = MaxPooling2D(pool_size=(2, 2), strides=None, padding='valid', data_format="channels_first")(x)
-    x = Dense(128, activation="elu")(x)
-    x = Dense(16, activation="elu")(x)
+    x = Conv2D(filters = 32, kernel_size = 3, strides = 2, padding = "same", data_format="channels_first")(x)
+    x = MaxPooling2D(pool_size=(2, 2), strides=None, padding='valid', data_format="channels_first")(x)
     x = Flatten()(x)
-    predictions = Dense(1, activation='linear')(x)
+    x = Dense(128, activation="relu")(x)
+    predictions = Dense(1, activation='sigmoid')(x)
 
     model = Model(inputs=inputs, outputs=predictions)
 
@@ -42,7 +42,7 @@ def strip_futilities(data):
     images = []
     labels = []
     for i, item in enumerate(data):
-        images.append(np.array([cv2.resize(item.image, (960, 960))]))
+        images.append(np.array([cv2.resize(item.image, img_shape)]))
         labels.append(np.array([item.ellipse]))
 
     return images, labels
@@ -67,7 +67,7 @@ if __name__ == '__main__':
     trn_images, trn_labels = strip_futilities(trn_data)
     tst_images, tst_labels = strip_futilities(tst_data)
 
-    model = classificator_model(img_shape, classif_classes)
+    model = classificator_model()
     for i in range(10000):
         model.fit(np.array(random.sample(trn_images, batch_size)), np.array(random.sample(trn_labels, batch_size)), 
                   epochs=1, batch_size=batch_size, verbose=1,

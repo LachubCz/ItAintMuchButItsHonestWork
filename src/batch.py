@@ -95,5 +95,5 @@ class DataSet(object):
 if __name__ == "__main__":
     trn_data = parse_data("../data/ground_truths_develop.csv", "../data/images/", "../data/ground_truths/")
     myData = DataSet(trn_data)
-    x, y = myData.getBatch(100) 
+    x, y = myData.getBatch(100)
     print(x.shape, y.shape)

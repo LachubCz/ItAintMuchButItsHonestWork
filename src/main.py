@@ -5,11 +5,12 @@ import sys
 import argparse
 
 import cv2
+import csv
 import numpy as np
-
 import matplotlib.pyplot as plt
+from timeit import default_timer as timer
 
-from tools import parse_data
+from tools import parse_data, perf_measure, get_scores
 from ellipse_fit_evaluation import evaluate_ellipse_fit, __get_gt_ellipse_from_csv
 from fit_ellipse import fit_ellipse
 
@@ -44,47 +45,6 @@ def get_args():
             print("Images path is not valid.")
 
     return args
-
-
-def perf_measure(y_actual, y_true):
-    TP = 0
-    FP = 0
-    TN = 0
-    FN = 0
-
-    for i in range(len(y_true)): 
-        if y_actual[i] !=0 and y_true[i] == 1:
-           TP += 1
-        if y_true[i] == 1 and y_actual[i] == 0:
-           FP += 1
-        if y_actual[i] == 0 and y_true[i] == 0:
-           TN += 1
-        if y_true[i] == 0 and y_actual[i] != 0:
-           FN += 1
-
-    score =  {
-      "TP": TP,
-      "FP": FP,
-      "TN": TN,
-      "FN": FN
-    }
-
-    return score
-
-
-def get_scores(image_filename, fit_ellipse, csv_filepath):
-    gt_ellipse = __get_gt_ellipse_from_csv(image_filename, csv_filepath)
-
-    if gt_ellipse:
-        if fit_ellipse:
-            return 1,1
-        else:
-            return 0,1
-    else:
-        if fit_ellipse:
-            return 0,0
-        else:
-            return 1,0
 
 
 if __name__ == '__main__':
@@ -122,3 +82,22 @@ if __name__ == '__main__':
         plt.show()
     elif args.mode == "entry":
         filenames = [f for f in listdir(args.images_path) if isfile(join(args.images_path, f))]
+        with open(args.csv_output, mode='w', newline='') as output_csv:
+            csv_writer = csv.writer(output_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow(['filename', 'ellipse_center_x', 'ellipse_center_y',
+                                 'ellipse_majoraxis', 'ellipse_minoraxis', 'ellipse_angle',
+                                 'elapsed_time'])
+            for i, item in enumerate(filenames):
+                image = cv2.imread(os.path.join(args.images_path, item), -1)
+                start = timer()
+                ret, thresh = cv2.threshold(image, 127, 255, 0)
+                thresh = np.uint8(np.clip(thresh, 0, 255))
+                ellipse = fit_ellipse(image, thresh)
+                end = timer()
+                elapsed_time = ((end - start)*1000)
+                if ellipse == None:
+                    csv_writer.writerow([item, '', '', '', '', '', int(elapsed_time)])
+                else:
+                    csv_writer.writerow([item, round(ellipse['center'][0]), round(ellipse['center'][1]),
+                                         round(ellipse['axes'][0]), round(ellipse['axes'][1], 2),
+                                         int(ellipse['angle']), int(elapsed_time)])

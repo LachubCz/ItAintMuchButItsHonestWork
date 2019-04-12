@@ -6,9 +6,9 @@ class Image(object):
         self.ground_truths = ground_truths
         self.filename = filename
         if gt_ellipse_center_x == '':
-            self.ellipse = False
+            self.ellipse = 0
         else:
-            self.ellipse = True
+            self.ellipse = 1
             self.gt_ellipse_center_x = float(gt_ellipse_center_x)
             self.gt_ellipse_center_y = float(gt_ellipse_center_y)
             self.gt_ellipse_majoraxis = float(gt_ellipse_majoraxis)

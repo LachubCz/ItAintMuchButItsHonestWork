@@ -33,8 +33,8 @@ class DataSet(object):
         shift = 0.2
         data_gen_args = dict(   data_format="channels_first",
                                 rotation_range=90,
-                                height_shift_range=[-shift,shift],
-                                width_shift_range=[-shift,shift],
+                                height_shift_range=shift,
+                                width_shift_range=shift,
                                 zoom_range=0.2,
                                 horizontal_flip=True,
                                 vertical_flip=True)

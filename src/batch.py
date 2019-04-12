@@ -43,13 +43,16 @@ class DataSet(object):
         g_tr_dataGen = ImageDataGenerator(**data_gen_args)
 
         seed = random.randint(0,65535)
-        img_gen = img_dataGen.flow(imageArr, seed=seed, batch_size=batchSize)
-        g_tr_gen = g_tr_dataGen.flow(grandArr, seed=seed, batch_size=batchSize)
+        for new_img in img_dataGen.flow(imageArr, seed=seed, batch_size=batchSize):
+            new_img = np.uint16(new_img)
+            break
+        for new_g_t in g_tr_dataGen.flow(grandArr, seed=seed, batch_size=batchSize):
+            new_g_t = np.uint16(new_g_t)
+            break
 
-        new_img = img_gen.next()
-        new_g_t = g_tr_gen.next()
-        new_img = np.uint16(new_img)
-        new_g_t = np.uint16(new_g_t)
+    
+        
+        
         
         return new_img, new_g_t
         
@@ -93,7 +96,7 @@ class DataSet(object):
 
 
 if __name__ == "__main__":
-    trn_data = parse_data("../data/ground_truths_develop.csv", "../data/images/", "../data/ground_truths/")
+    trn_data = parse_data("./data/ground_truths_develop.csv", "./data/images/", "./data/ground_truths/")
     myData = DataSet(trn_data)
     x, y = myData.getBatch(100)
     print(x.shape, y.shape)

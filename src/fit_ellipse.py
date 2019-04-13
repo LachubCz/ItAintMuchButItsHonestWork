@@ -38,9 +38,9 @@ def fitting_error(contour):
     return cumulative_diff
 
 def recursive_contour_divide(contour):
-    print(contour)
+    # print(contour)
     err = fitting_error(contour)
-    print(err)
+    # print(err)
     if err < 400:
         return contour
     
@@ -88,7 +88,7 @@ def fit_ellipse(original, segmented):
     test = cv2.cvtColor(np.uint8(np.clip(original, 0, 255)), cv2.COLOR_GRAY2BGR)
     cv2.drawContours(test, reduced_contour, -1, (0,255,0), 3)
     #print(max_length)
-    print(len(reduced_contour))
+    # print(len(reduced_contour))
     cv2.ellipse(test, bounding_rect, (0, 0, 255), 5)
 
     # count parameters
@@ -106,8 +106,8 @@ def fit_ellipse(original, segmented):
     # print(ellipse_angle)
 
     # show image
-    cv2.imshow("test", test)
-    cv2.waitKey(0)
+    # cv2.imshow("test", test)
+    # cv2.waitKey(0)
 
     ellipse =  {
       "center": [ellipse_center_x, ellipse_center_y],

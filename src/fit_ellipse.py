@@ -106,7 +106,7 @@ def sweet_mother_ellipse(image):
 
         # its bullshit, i did not hit her, i did not. oh hi mark!
         if reduced_contour is None:
-            return (None, None)
+            reduced_contour = new_cont
 
         # fit ellipse
         bounding_rect = cv2.fitEllipse(reduced_contour)
@@ -115,7 +115,7 @@ def sweet_mother_ellipse(image):
         # test = cv2.cvtColor(np.uint8(np.clip(image, 0, 255)), cv2.COLOR_GRAY2BGR)
         #print(max_length)
         # print(len(reduced_contour))
-        smaller_rect = ((bounding_rect[0][0], bounding_rect[0][1]), (max(bounding_rect[1][0] - 5, 0) , max(bounding_rect[1][1] - 5, 0)), bounding_rect[2])
+        smaller_rect = ((bounding_rect[0][0], bounding_rect[0][1]), (max(bounding_rect[1][0] - 10, 0) , max(bounding_rect[1][1] - 10, 0)), bounding_rect[2])
         cv2.ellipse(image, smaller_rect, 255, -1)
         # cv2.imshow("result", cv2.resize(image, None, fx = 0.5, fy = 0.5, interpolation = cv2.INTER_AREA))
         # cv2.waitKey(0)
@@ -132,7 +132,31 @@ def fit_ellipse(original, segmented, file_to_open = None):
     reduced_contour, bounding_rect = sweet_mother_ellipse(segmented)
 
     if bounding_rect is None:
-        return None
+        # find contours
+        #_, contours, _ = cv2.findContours(segmented, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # windows shit
+        contours, _ = cv2.findContours(segmented, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # this is how we do it
+        #print("cont:", np.shape(contours))
+
+        # get max length contour
+        new_cont = np.array([])
+        if len(contours) > 0:
+            new_cont = contours[0]
+            for i in range(len(contours)-1):
+                new_cont = np.concatenate((new_cont, contours[i]), axis=0)
+
+        # no ellipse found
+        if len(new_cont) < 5:
+            return None
+
+        # get reduced contour
+        reduced_contour = recursive_contour_divide(new_cont)
+
+        # its bullshit, i did not hit her, i did not. oh hi mark!
+        if reduced_contour is None:
+            reduced_contour = new_cont
+
+        # fit ellipse
+        bounding_rect = cv2.fitEllipse(reduced_contour)
 
     # draw ellipse
     test = cv2.cvtColor(np.uint8(np.clip(original, 0, 255)), cv2.COLOR_GRAY2BGR)
@@ -178,12 +202,9 @@ if __name__ == '__main__':
 
     data = []
     for i, item in enumerate(content):
-        if i == 0:
+        if i < 15:
             continue
         parametres = item.split(',')
-
-        if i < 10:
-            continue
 
         image = cv2.imread(os.path.join("./data/images/", parametres[0]), -1)
         image = image * np.uint16(65535.0 / max(image.ravel()))

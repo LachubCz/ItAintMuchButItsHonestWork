@@ -26,15 +26,16 @@ def fitting_error(contour):
         # print(min(bounding_rect[1]) / 2.0)
         return 100000
 
+    return 0
     # get its focal points
-    a = max(bounding_rect[1]) / 2.0
-    b = min(bounding_rect[1]) / 2.0
-    f = pow(a**2 - b**2, 0.5)
-    v_f = (math.cos(bounding_rect[2]) * f, math.sin(bounding_rect[2]) * f)
-    f1 = (bounding_rect[0][0] - v_f[0], bounding_rect[0][1] - v_f[1])
-    f2 = (bounding_rect[0][0] + v_f[0], bounding_rect[0][1] + v_f[1])
-    f = pow(a**2 - b**2, 0.5)
-    a2 = max(bounding_rect[1])
+    # a = max(bounding_rect[1]) / 2.0
+    # b = min(bounding_rect[1]) / 2.0
+    # f = pow(a**2 - b**2, 0.5)
+    # v_f = (math.cos(bounding_rect[2]) * f, math.sin(bounding_rect[2]) * f)
+    # f1 = (bounding_rect[0][0] - v_f[0], bounding_rect[0][1] - v_f[1])
+    # f2 = (bounding_rect[0][0] + v_f[0], bounding_rect[0][1] + v_f[1])
+    # f = pow(a**2 - b**2, 0.5)
+    # a2 = max(bounding_rect[1])
 
     # test
     # v_t = (math.cos(bounding_rect[2]) * a, math.sin(bounding_rect[2]) * a)
@@ -47,14 +48,14 @@ def fitting_error(contour):
     #     print(abs(v1s + v2s - a2))
     
     # find cumulative difference
-    cumulative_diff = 0
-    for j in range(len(contour)):
-        v1 = (contour[j][0][0] - f1[0], contour[j][0][1] - f1[1])
-        v2 = (contour[j][0][0] - f2[0], contour[j][0][1] - f2[1])
-        v1s = pow(v1[0]**2 + v1[1]**2, 0.5)
-        v2s = pow(v2[0]**2 + v2[1]**2, 0.5)
-        cumulative_diff += abs(v1s + v2s - a2)
-    return cumulative_diff
+    # cumulative_diff = 0
+    # for j in range(len(contour)):
+    #     v1 = (contour[j][0][0] - f1[0], contour[j][0][1] - f1[1])
+    #     v2 = (contour[j][0][0] - f2[0], contour[j][0][1] - f2[1])
+    #     v1s = pow(v1[0]**2 + v1[1]**2, 0.5)
+    #     v2s = pow(v2[0]**2 + v2[1]**2, 0.5)
+    #     cumulative_diff += abs(v1s + v2s - a2)
+    # return cumulative_diff
 
 def recursive_contour_divide(contour):
     err = fitting_error(contour)
@@ -102,26 +103,33 @@ def sweet_mother_ellipse(image):
 
         # get reduced contour
         reduced_contour = recursive_contour_divide(new_cont)
+        # reduced_contour = new_cont
         
 
         # its bullshit, i did not hit her, i did not. oh hi mark!
         if reduced_contour is None:
             reduced_contour = new_cont
 
+        # test = cv2.cvtColor(np.uint8(np.clip(image, 0, 255)), cv2.COLOR_GRAY2BGR)
+        # cv2.drawContours(test, reduced_contour, -1, (0,255,0), 3)
+        # cv2.imshow("test", cv2.resize(test, None, fx = 0.5, fy = 0.5, interpolation = cv2.INTER_AREA))
+
         # fit ellipse
         bounding_rect = cv2.fitEllipse(reduced_contour)
 
         # draw ellipse
-        # test = cv2.cvtColor(np.uint8(np.clip(image, 0, 255)), cv2.COLOR_GRAY2BGR)
+        
         #print(max_length)
         # print(len(reduced_contour))
-        smaller_rect = ((bounding_rect[0][0], bounding_rect[0][1]), (max(bounding_rect[1][0] - 10, 0) , max(bounding_rect[1][1] - 10, 0)), bounding_rect[2])
+        smaller_rect = ((bounding_rect[0][0], bounding_rect[0][1]), (max(abs(bounding_rect[1][0]) - 10, 0) , max(abs(bounding_rect[1][1]) - 10, 0)), bounding_rect[2])
         cv2.ellipse(image, smaller_rect, 255, -1)
-        # cv2.imshow("result", cv2.resize(image, None, fx = 0.5, fy = 0.5, interpolation = cv2.INTER_AREA))
+        # test = cv2.cvtColor(np.uint8(np.clip(image, 0, 255)), cv2.COLOR_GRAY2BGR)
+        # cv2.ellipse(test, smaller_rect, (255, 255, 255), -1)
         # cv2.waitKey(0)
 
         # check new ellipse
-        if abs(bounding_rect[0][0] - old_rect[0][0]) < 1.0 and abs(bounding_rect[0][1] - old_rect[0][1]) < 1.0 and abs(bounding_rect[1][0] - old_rect[1][0]) < 1.0 and abs(bounding_rect[1][1] - old_rect[1][1]) < 1.0 and abs(bounding_rect[2] - old_rect[2]) < 1.0:
+        t = 1.0
+        if abs(bounding_rect[0][0] - old_rect[0][0]) < t and abs(bounding_rect[0][1] - old_rect[0][1]) < t and abs(bounding_rect[1][0] - old_rect[1][0]) < t and abs(bounding_rect[1][1] - old_rect[1][1]) < t and abs(bounding_rect[2] - old_rect[2]) < t:
             fitted = True
         old_rect = ((bounding_rect[0][0], bounding_rect[0][1]), (bounding_rect[1][0], bounding_rect[1][1]), bounding_rect[2])
 
@@ -202,17 +210,26 @@ if __name__ == '__main__':
 
     data = []
     for i, item in enumerate(content):
-        if i < 15:
+        if i == 0:
             continue
         parametres = item.split(',')
 
         image = cv2.imread(os.path.join("./data/images/", parametres[0]), -1)
-        image = image * np.uint16(65535.0 / max(image.ravel()))
-        image = np.uint8(np.clip(255.0 / 65535.0 * image, 0, 255))
-        blur = cv2.bilateralFilter(image, 20, 400, 400)
-        # blur = cv2.GaussianBlur(image, (25, 25), 0)
-        blur = blur * np.uint8(255.0 / max(blur.ravel()))
-        ret, thresh = cv2.threshold(blur, 50, 255, 0)
+        maxval = max(image.ravel())
+        new_image =  np.uint8(np.clip(255/maxval * image, 0, 255))
+
+        # threshold
+        # k_size = 3
+        # kernel = np.ones((k_size, k_size),np.float32) / k_size**2
+        # dst = cv2.filter2D(new_image,-1,kernel)
+        tmpImg = cv2.fastNlMeansDenoisingColored(cv2.cvtColor(new_image, cv2.COLOR_GRAY2BGR), h = 5, templateWindowSize = 5, searchWindowSize = 15)
+        blur = cv2.GaussianBlur(cv2.cvtColor(tmpImg, cv2.COLOR_BGR2GRAY),(5,5),0)
+        # blur = cv2.GaussianBlur(dst, (5, 5), 0)
+
+        # blur
+        # ret,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        ret, thresh = cv2.threshold(blur, 70, 255, 0)
+        thresh = np.uint8(np.clip(thresh, 0, 255))
 
 
         ####################
@@ -255,7 +272,7 @@ if __name__ == '__main__':
         #imwrite("{}.png" .format(i), thresh)
         #cv2.imshow("test", thresh)
         #cv2.waitKey(0)
-        res = fit_ellipse(image, thresh, os.path.join("./data/ground_truths/", parametres[0][:parametres[0].rfind('.')] + ".png"))
+        res = fit_ellipse(new_image, thresh, os.path.join("./data/ground_truths/", parametres[0][:parametres[0].rfind('.')] + ".png"))
         if res is None:
             print(parametres[0])
 

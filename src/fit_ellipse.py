@@ -131,25 +131,32 @@ if __name__ == '__main__':
         parametres = item.split(',')
 
         image = cv2.imread(os.path.join("./data/images/", parametres[0]), -1)
+        maxval = max(image.ravel())
+        new_image =  np.uint8(np.clip(255/maxval * image, 0, 255))
         # threshold
         # print(image.dtype, np.shape(image))
-        ret, thresh = cv2.threshold(image, 127, 255, 0)
+        #ret, thresh = cv2.threshold(image, 127, 255, 0)
+        kernel = np.ones((7,7),np.float32)/25
+        dst = cv2.filter2D(new_image,-1,kernel)
+        tmpImg = cv2.fastNlMeansDenoisingColored(cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR), h = 5, templateWindowSize = 5, searchWindowSize = 15)
+        blur = cv2.GaussianBlur(cv2.cvtColor(tmpImg, cv2.COLOR_BGR2GRAY),(5,5),0)
+
+        #blur = cv2.GaussianBlur(new_image,(13,13),0)
+        ret,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
         thresh = np.uint8(np.clip(thresh, 0, 255))
+        
         # cv2.imwrite("{}.png" .format(i), thresh)
+        
+        # kernel = np.ones((7, 7), np.uint8) 
+        # closing = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel, iterations = 2) 
+         
+        # # Background area using Dialation 
+        # bg = cv2.dilate(closing, kernel, iterations = 1) 
+         
+        # # Finding foreground area 
+        # dist_transform = cv2.distanceTransform(closing, cv2.DIST_L2, 0) 
+        # ret, fg = cv2.threshold(dist_transform, 0.02* dist_transform.max(), 255, 0) 
 
-        ####################
-
-        #kernel = np.ones((3, 3), np.uint8) 
-        #closing = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, 
-        #                            kernel, iterations = 2) 
-        #  
-        ## Background area using Dialation 
-        #bg = cv2.dilate(closing, kernel, iterations = 1) 
-        #  
-        ## Finding foreground area 
-        #dist_transform = cv2.distanceTransform(closing, cv2.DIST_L2, 0) 
-        #ret, fg = cv2.threshold(dist_transform, 0.02
-        #                        * dist_transform.max(), 255, 0) 
         ##############################
         #image = cv2.imread(os.path.join("./data/images/", parametres[0]), cv2.CV_8UC1)
 
@@ -177,7 +184,7 @@ if __name__ == '__main__':
         #imwrite("{}.png" .format(i), thresh)
         #cv2.imshow("test", thresh)
         #cv2.waitKey(0)
-        fit_ellipse(image, thresh)
+        fit_ellipse(new_image, thresh)
 
     # draw minimal rectangle
     # box = cv2.boxPoints(bounding_rect)

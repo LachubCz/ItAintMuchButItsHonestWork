@@ -78,8 +78,8 @@ def recursive_contour_divide(contour):
 
 def fit_ellipse(original, segmented, file_to_open = None):
     # find contours
-    # _, contours, _ = cv2.findContours(segmented, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # windows shit
-    contours, _ = cv2.findContours(segmented, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # this is how we do it
+    _, contours, _ = cv2.findContours(segmented, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # windows shit
+    #contours, _ = cv2.findContours(segmented, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # this is how we do it
     #print("cont:", np.shape(contours))
 
     # get max length contour

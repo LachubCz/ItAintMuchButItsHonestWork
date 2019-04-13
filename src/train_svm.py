@@ -55,3 +55,9 @@ def train_svm_classifer(features, labels, model_output_path):
 
     print("\nClassification report:")
     print(classification_report(y_test, y_predict))
+
+
+def get_model(model_weights):
+    clf = joblib.load(model_weights)
+
+    return clf

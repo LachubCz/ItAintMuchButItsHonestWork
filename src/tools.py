@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 
 from image import Image
+from ellipse_fit_evaluation import __get_gt_ellipse_from_csv
 
 def parse_data(filename, data_path, ground_truths_path):
     with open(filename) as f:
@@ -38,20 +39,20 @@ def parse_data(filename, data_path, ground_truths_path):
     return data
 
 
-def perf_measure(y_actual, y_true):
+def perf_measure(y_actual, y_hat):
     TP = 0
     FP = 0
     TN = 0
     FN = 0
 
-    for i in range(len(y_true)): 
-        if y_actual[i] !=0 and y_true[i] == 1:
+    for i in range(len(y_hat)): 
+        if y_actual[i]==y_hat[i]==1:
            TP += 1
-        if y_true[i] == 1 and y_actual[i] == 0:
+        if y_hat[i]==1 and y_actual[i]!=y_hat[i]:
            FP += 1
-        if y_actual[i] == 0 and y_true[i] == 0:
+        if y_actual[i]==y_hat[i]==0:
            TN += 1
-        if y_true[i] == 0 and y_actual[i] != 0:
+        if y_hat[i]==0 and y_actual[i]!=y_hat[i]:
            FN += 1
 
     score =  {
@@ -62,21 +63,6 @@ def perf_measure(y_actual, y_true):
     }
 
     return score
-
-
-def get_scores(image_filename, fit_ellipse, csv_filepath):
-    gt_ellipse = __get_gt_ellipse_from_csv(image_filename, csv_filepath)
-
-    if gt_ellipse:
-        if fit_ellipse:
-            return 1,1
-        else:
-            return 0,1
-    else:
-        if fit_ellipse:
-            return 0,0
-        else:
-            return 1,0
 
 
 if __name__ == '__main__':

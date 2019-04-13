@@ -41,4 +41,31 @@ def extract_features(image_paths, verbose=False):
             })
             features[i, :] = np.squeeze(feature)
 
+    return features
+
+
+def extract_feature(image_path, verbose=False):
+    """
+    extract_feature computed the inception bottleneck feature for a list of images
+    image_path: array of image path
+    return: 2-d array in the shape of (len(image_path), 2048)
+    """
+    feature_dimension = 2048
+    features = np.empty((len(image_path), feature_dimension))
+
+    with tf.Session() as sess:
+        flattened_tensor = sess.graph.get_tensor_by_name('pool_3:0')
+
+        if verbose:
+            print('Processing %s...' % (image_path[0]))
+
+        if not gfile.Exists(image_path[0]):
+            tf.logging.fatal('File does not exist %s', image)
+
+        image_data = gfile.FastGFile(image_path[0], 'rb').read()
+        feature = sess.run(flattened_tensor, {
+            'DecodeJpeg/contents:0': image_data
+        })
+        features[0, :] = np.squeeze(feature)
+
     return features 

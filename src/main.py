@@ -6,13 +6,24 @@ import argparse
 
 import cv2
 import csv
+import shutil
 import numpy as np
 import matplotlib.pyplot as plt
 from timeit import default_timer as timer
 
-from tools import parse_data, perf_measure, get_scores
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore",category=DeprecationWarning)
+import tensorflow as tf
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+
+
+from tools import parse_data, perf_measure
 from ellipse_fit_evaluation import evaluate_ellipse_fit, __get_gt_ellipse_from_csv
 from fit_ellipse import fit_ellipse
+
+from extracting_inception import create_graph, extract_features, extract_feature
+from train_svm import train_svm_classifer, get_model
 
 def get_args():
     """
@@ -55,21 +66,33 @@ if __name__ == '__main__':
         score_sum = 0
         true_values = []
         predicted_values = []
-        for i, item in enumerate(data):
-            ret, thresh = cv2.threshold(item.image, 127, 255, 0)
-            thresh = np.uint8(np.clip(thresh, 0, 255))
+        if not os.path.exists("./images_png"):
+            os.makedirs("./images_png")
+        create_graph("./models/tensorflow_inception_graph.pb")
+        model = get_model("./models/model.pkl")
 
-            ellipse = fit_ellipse(item.image, thresh)
+        for i, item in enumerate(data):
+            bgr = cv2.cvtColor(item.processed_image, cv2.COLOR_GRAY2BGR)
+            cv2.imwrite("./images_png/{}.png" .format(item.filename[:-5]), bgr)
+            features = extract_feature(["./images_png/{}.png" .format(item.filename[:-5])])
+            prediction = model.predict(features)[0]
+            if prediction == 0:
+                ellipse = None
+            else:
+                ret, thresh = cv2.threshold(item.image, 127, 255, 0)
+                thresh = np.uint8(np.clip(thresh, 0, 255))
+
+                ellipse = fit_ellipse(item.image, thresh)
 
             score = evaluate_ellipse_fit(item.filename, ellipse, args.csv_input)
 
-            predicted_value, true_value = get_scores(item.filename, ellipse, args.csv_input)
-            true_values.append(true_value)
-            predicted_values.append(predicted_value)
+            predicted_values.append(prediction)
+            true_values.append(item.ellipse)
             score_sum += score
 
             print("{} - {}" .format(item.filename, (round(score, 2))))
 
+        shutil.rmtree('./images_png')
         print("Overall score: {}/{} = {}%" .format((round(score_sum, 2)), len(data), round((score_sum/len(data))*100, 2)))
 
         dictionary = perf_measure(predicted_values, true_values)

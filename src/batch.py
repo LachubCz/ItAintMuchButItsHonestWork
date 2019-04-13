@@ -33,8 +33,8 @@ class DataSet(object):
         shift = 0.2
         data_gen_args = dict(   data_format="channels_first",
                                 rotation_range=90,
-                                height_shift_range=[-shift,shift],
-                                width_shift_range=[-shift,shift],
+                                height_shift_range=shift,
+                                width_shift_range=shift,
                                 zoom_range=0.2,
                                 horizontal_flip=True,
                                 vertical_flip=True)
@@ -43,14 +43,13 @@ class DataSet(object):
         g_tr_dataGen = ImageDataGenerator(**data_gen_args)
 
         seed = random.randint(0,65535)
-        img_gen = img_dataGen.flow(imageArr, seed=seed, batch_size=batchSize)
-        g_tr_gen = g_tr_dataGen.flow(grandArr, seed=seed, batch_size=batchSize)
+        for new_img in img_dataGen.flow(imageArr, seed=seed, batch_size=batchSize):
+            new_img = np.uint16(new_img)
+            break
+        for new_g_t in g_tr_dataGen.flow(grandArr, seed=seed, batch_size=batchSize):
+            new_g_t = np.uint16(new_g_t)
+            break
 
-        new_img = img_gen.next()
-        new_g_t = g_tr_gen.next()
-        new_img = np.uint16(new_img)
-        new_g_t = np.uint16(new_g_t)
-        
         return new_img, new_g_t
         
         
@@ -93,7 +92,16 @@ class DataSet(object):
 
 
 if __name__ == "__main__":
-    trn_data = parse_data("../data/ground_truths_develop.csv", "../data/images/", "../data/ground_truths/")
+    trn_data = parse_data("./data/ground_truths_develop.csv", "./data/images/", "./data/ground_truths/")
     myData = DataSet(trn_data)
-    x, y = myData.getBatch(100)
-    print(x.shape, y.shape)
+    counter = 0
+    for e in range(100):
+        x, y = myData.getBatch(32)
+        for i, item in enumerate(x):
+            print(np.shape(x))
+            new = cv2.cvtColor(item[0], cv2.COLOR_GRAY2BGR)
+            if y[i] == 0:
+                cv2.imwrite("{}_F.png" .format(counter), new)
+            if y[i] == 1:
+                cv2.imwrite("{}_T.png" .format(counter), new)
+            counter += 1

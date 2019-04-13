@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 
 from image import Image
+from ellipse_fit_evaluation import __get_gt_ellipse_from_csv
 
 def parse_data(filename, data_path, ground_truths_path):
     with open(filename) as f:
@@ -36,6 +37,33 @@ def parse_data(filename, data_path, ground_truths_path):
         data.append(img)
 
     return data
+
+
+def perf_measure(y_actual, y_hat):
+    TP = 0
+    FP = 0
+    TN = 0
+    FN = 0
+
+    for i in range(len(y_hat)): 
+        if y_actual[i]==y_hat[i]==1:
+           TP += 1
+        if y_hat[i]==1 and y_actual[i]!=y_hat[i]:
+           FP += 1
+        if y_actual[i]==y_hat[i]==0:
+           TN += 1
+        if y_hat[i]==0 and y_actual[i]!=y_hat[i]:
+           FN += 1
+
+    score =  {
+      "TP": TP,
+      "FP": FP,
+      "TN": TN,
+      "FN": FN
+    }
+
+    return score
+
 
 if __name__ == '__main__':
     parse_data("./data/ground_truths_develop.csv", "./data/images/", "./data/ground_truths/")

@@ -5,13 +5,25 @@ import sys
 import argparse
 
 import cv2
+import csv
+import shutil
 import numpy as np
-
 import matplotlib.pyplot as plt
+from timeit import default_timer as timer
 
-from tools import parse_data
+import warnings
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore",category=DeprecationWarning)
+import tensorflow as tf
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+
+
+from tools import parse_data, perf_measure
 from ellipse_fit_evaluation import evaluate_ellipse_fit, __get_gt_ellipse_from_csv
 from fit_ellipse import fit_ellipse
+
+from extracting_inception import create_graph, extract_features, extract_feature
+from train_svm import train_svm_classifer, get_model
 
 def get_args():
     """
@@ -46,47 +58,6 @@ def get_args():
     return args
 
 
-def perf_measure(y_actual, y_true):
-    TP = 0
-    FP = 0
-    TN = 0
-    FN = 0
-
-    for i in range(len(y_true)): 
-        if y_actual[i] !=0 and y_true[i] == 1:
-           TP += 1
-        if y_true[i] == 1 and y_actual[i] == 0:
-           FP += 1
-        if y_actual[i] == 0 and y_true[i] == 0:
-           TN += 1
-        if y_true[i] == 0 and y_actual[i] != 0:
-           FN += 1
-
-    score =  {
-      "TP": TP,
-      "FP": FP,
-      "TN": TN,
-      "FN": FN
-    }
-
-    return score
-
-
-def get_scores(image_filename, fit_ellipse, csv_filepath):
-    gt_ellipse = __get_gt_ellipse_from_csv(image_filename, csv_filepath)
-
-    if gt_ellipse:
-        if fit_ellipse:
-            return 1,1
-        else:
-            return 0,1
-    else:
-        if fit_ellipse:
-            return 0,0
-        else:
-            return 1,0
-
-
 if __name__ == '__main__':
     args = get_args()
     data = parse_data(args.csv_input, args.images_path, args.ground_truths_path)
@@ -95,31 +66,44 @@ if __name__ == '__main__':
         score_sum = 0
         true_values = []
         predicted_values = []
+            
+        if not os.path.exists("./images_png"):
+            os.makedirs("./images_png")
+        create_graph("./models/tensorflow_inception_graph.pb")
+        model = get_model("./models/model.pkl")
+
         for i, item in enumerate(data):
-            maxval = max(item.image.ravel())
-            new_image =  np.uint8(np.clip(255/maxval * item.image, 0, 255))
+            bgr = cv2.cvtColor(item.processed_image, cv2.COLOR_GRAY2BGR)
+            cv2.imwrite("./images_png/{}.png" .format(item.filename[:-5]), bgr)
+            features = extract_feature(["./images_png/{}.png" .format(item.filename[:-5])])
+            prediction = model.predict(features)[0]
+            if prediction == 0:
+                ellipse = None
+            else:
+                maxval = max(item.image.ravel())
+                new_image =  np.uint8(np.clip(255/maxval * item.image, 0, 255))
 
-            # threshold
-            kernel = np.ones((3,3),np.float32)/25
-            dst = cv2.filter2D(new_image,-1,kernel)
-            tmpImg = cv2.fastNlMeansDenoisingColored(cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR), h = 5, templateWindowSize = 5, searchWindowSize = 15)
-            blur = cv2.GaussianBlur(cv2.cvtColor(tmpImg, cv2.COLOR_BGR2GRAY),(5,5),0)
+                # threshold
+                kernel = np.ones((3,3),np.float32)/25
+                dst = cv2.filter2D(new_image,-1,kernel)
+                tmpImg = cv2.fastNlMeansDenoisingColored(cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR), h = 5, templateWindowSize = 5, searchWindowSize = 15)
+                blur = cv2.GaussianBlur(cv2.cvtColor(tmpImg, cv2.COLOR_BGR2GRAY),(5,5),0)
 
-            # blur
-            ret,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-            thresh = np.uint8(np.clip(thresh, 0, 255))
+                # blur
+                ret,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+                thresh = np.uint8(np.clip(thresh, 0, 255))
 
-            ellipse = fit_ellipse(item.image, thresh)
+                ellipse = fit_ellipse(item.image, thresh)
 
             score = evaluate_ellipse_fit(item.filename, ellipse, args.csv_input)
 
-            predicted_value, true_value = get_scores(item.filename, ellipse, args.csv_input)
-            true_values.append(true_value)
-            predicted_values.append(predicted_value)
+            predicted_values.append(prediction)
+            true_values.append(item.ellipse)
             score_sum += score
 
-            print("{} - {}" .format(item.filename, (round(score, 2))))
+            print("{} - {} - {} - {}" .format(item.filename, (round(score, 2)), prediction, item.ellipse))
 
+        shutil.rmtree('./images_png')
         print("Overall score: {}/{} = {}%" .format((round(score_sum, 2)), len(data), round((score_sum/len(data))*100, 2)))
 
         dictionary = perf_measure(predicted_values, true_values)
@@ -132,3 +116,41 @@ if __name__ == '__main__':
         plt.show()
     elif args.mode == "entry":
         filenames = [f for f in listdir(args.images_path) if isfile(join(args.images_path, f))]
+        
+        if not os.path.exists("./images_png"):
+            os.makedirs("./images_png")
+        create_graph("./models/tensorflow_inception_graph.pb")
+        model = get_model("./models/model.pkl")
+        
+        with open(args.csv_output, mode='w', newline='') as output_csv:
+            csv_writer = csv.writer(output_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow(['filename', 'ellipse_center_x', 'ellipse_center_y',
+                                 'ellipse_majoraxis', 'ellipse_minoraxis', 'ellipse_angle',
+                                 'elapsed_time'])
+
+            for i, item in enumerate(filenames):
+                image = cv2.imread(os.path.join(args.images_path, item), -1)
+                start = timer()
+                
+                image_processed = image * np.uint16(65535.0 / max(image.ravel()))
+                image_processed = cv2.resize(image_processed, (960, 960), interpolation = cv2.INTER_AREA)
+                bgr = cv2.cvtColor(image_processed, cv2.COLOR_GRAY2BGR)
+                cv2.imwrite("./images_png/{}.png" .format(item[:-5]), bgr)
+                features = extract_feature(["./images_png/{}.png" .format(item[:-5])])
+                prediction = model.predict(features)[0]
+                if prediction == 0:
+                    ellipse = None
+                else:
+                    ret, thresh = cv2.threshold(image, 127, 255, 0)
+                    thresh = np.uint8(np.clip(thresh, 0, 255))
+                    ellipse = fit_ellipse(image, thresh)
+                os.remove("./images_png/{}.png" .format(item[:-5]))
+                end = timer()
+                elapsed_time = ((end - start)*1000)
+                if ellipse == None:
+                    csv_writer.writerow([item, '', '', '', '', '', int(elapsed_time)])
+                else:
+                    csv_writer.writerow([item, round(ellipse['center'][0], 2), round(ellipse['center'][1], 2),
+                                         round(ellipse['axes'][0], 2), round(ellipse['axes'][1], 2),
+                                         int(ellipse['angle']), int(elapsed_time)])
+            shutil.rmtree('./images_png')

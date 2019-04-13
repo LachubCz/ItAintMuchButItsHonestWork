@@ -7,6 +7,25 @@ def fitting_error(contour):
     # fit ellipse
     bounding_rect = cv2.fitEllipse(contour)
 
+    # fit line
+    line = cv2.fitLine(contour, cv2.DIST_L2, 0, 0.01, 0.01)
+    p1 = (line[2][0], line[3][0])
+    p2 = (p1[0] + line[0][0], p1[1] + line[1][0])
+
+    # find cumulative difference
+    cumulative_diff = 0
+    for j in range(len(contour)):
+        p0 = contour[j][0]
+        top = abs((p2[1] - p1[1]) * p0[0] - (p2[0] - p1[0]) * p0[1] + p2[0] * p1[1] - p2[1] * p1[0])
+        bottom = pow((p2[1] - p1[1])**2 + (p2[0] - p1[0])**2, 0.5)
+        cumulative_diff += top / bottom
+    
+    # its a line! exterminate it!
+    # print(min(bounding_rect[1]) / 2.0)
+    if cumulative_diff < 25 - math.log(min(bounding_rect[1]) * 8):
+        # print(min(bounding_rect[1]) / 2.0)
+        return 100000
+
     # get its focal points
     a = max(bounding_rect[1]) / 2.0
     b = min(bounding_rect[1]) / 2.0
@@ -38,17 +57,18 @@ def fitting_error(contour):
     return cumulative_diff
 
 def recursive_contour_divide(contour):
-    print(contour)
     err = fitting_error(contour)
-    print(err)
-    if err < 50:
+    # print(err)
+    if err < 400:
         return contour
+    if err > 99999:
+        return None
     
     if len(contour) > 60:
         half1 = recursive_contour_divide(contour[:int(len(contour) / 2)])
         half2 = recursive_contour_divide(contour[int(len(contour) / 2):])
         if half1 is not None and half2 is not None:
-            return contour
+            return np.concatenate((half1, half2), axis = 0)
         if half1 is not None:
             return half1
         if half2 is not None:
@@ -63,23 +83,24 @@ def fit_ellipse(original, segmented):
     #print("cont:", np.shape(contours))
 
     # get max length contour
-    max_length = 0
-    max_index = 0
-    for i in range(len(contours)):
-        if len(contours[i]) > max_length:
-            max_length = len(contours[i])
-            max_index = i
+    new_cont = np.array([])
+    if len(contours) > 0:
+        new_cont = contours[0]
+        for i in range(len(contours)-1):
+            new_cont = np.concatenate((new_cont, contours[i]), axis=0)
     
     # no ellipse found
-    if max_length < 5:
+    if len(new_cont) < 5:
+        print("Less than five")
         return None
 
     # get reduced contour
-    reduced_contour = recursive_contour_divide(contours[max_index])
+    reduced_contour = recursive_contour_divide(new_cont)
 
     # its bullshit, i did not hit her, i did not. oh hi mark!
     if reduced_contour is None:
-        return None
+        print("Reduced is none")
+        reduced_contour = new_cont
 
     # fit ellipse
     bounding_rect = cv2.fitEllipse(reduced_contour)
@@ -87,8 +108,6 @@ def fit_ellipse(original, segmented):
     # draw ellipse
     test = cv2.cvtColor(np.uint8(np.clip(original, 0, 255)), cv2.COLOR_GRAY2BGR)
     cv2.drawContours(test, reduced_contour, -1, (0,255,0), 3)
-    print(max_length)
-    print(len(reduced_contour))
     cv2.ellipse(test, bounding_rect, (0, 0, 255), 5)
 
     # count parameters
@@ -177,7 +196,9 @@ if __name__ == '__main__':
         #imwrite("{}.png" .format(i), thresh)
         #cv2.imshow("test", thresh)
         #cv2.waitKey(0)
-        fit_ellipse(image, thresh)
+        res = fit_ellipse(image, thresh)
+        if res is None:
+            print(parametres[0])
 
     # draw minimal rectangle
     # box = cv2.boxPoints(bounding_rect)

@@ -141,8 +141,8 @@ if __name__ == '__main__':
                 if prediction == 0:
                     ellipse = None
                 else:
-                    maxval = max(item.image.ravel())
-                    new_image =  np.uint8(np.clip(255/maxval * item.image, 0, 255))
+                    maxval = max(image.ravel())
+                    new_image =  np.uint8(np.clip(255/maxval * image, 0, 255))
 
                     # threshold
                     kernel = np.ones((3,3),np.float32)/25
@@ -154,7 +154,7 @@ if __name__ == '__main__':
                     ret,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
                     thresh = np.uint8(np.clip(thresh, 0, 255))
 
-                    ellipse = fit_ellipse(item.image, thresh)
+                    ellipse = fit_ellipse(image, thresh)
                 os.remove("./images_png/{}.png" .format(item[:-5]))
                 end = timer()
                 elapsed_time = ((end - start)*1000)

@@ -68,4 +68,4 @@ def extract_feature(image_path, verbose=False):
         })
         features[0, :] = np.squeeze(feature)
 
-    return features 
+    return features

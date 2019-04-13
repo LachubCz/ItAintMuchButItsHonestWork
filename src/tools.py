@@ -6,6 +6,9 @@ from image import Image
 from ellipse_fit_evaluation import __get_gt_ellipse_from_csv
 
 def parse_data(filename, data_path, ground_truths_path):
+    """
+    method parses csv file and loads images into structures
+    """
     with open(filename) as f:
         content = f.readlines()
 
@@ -40,6 +43,9 @@ def parse_data(filename, data_path, ground_truths_path):
 
 
 def perf_measure(y_actual, y_hat):
+    """
+    function returns TP, FP, TN, FN metrics score
+    """
     TP = 0
     FP = 0
     TN = 0

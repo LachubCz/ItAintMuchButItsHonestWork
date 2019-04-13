@@ -1,3 +1,15 @@
+#################################################################################
+# Description:  File for training of clasification neural network
+#               
+# Authors:      Petr Buchal         <petr.buchal@lachub.cz>
+#               Martin Ivanco       <ivancom.fr@gmail.com>
+#               Vladimir Jerabek    <jerab.vl@gmail.com>
+#
+# Date:     2019/04/13
+# 
+# Note:     This source code is part of project created on UnIT HECKATHON
+#################################################################################
+
 import random
 from datetime import datetime
 
@@ -14,6 +26,9 @@ from batch import DataSet
 img_shape = (960, 960)
 
 def classificator_model():
+    """
+    neural network model for classification, if there is some ellipse in image
+    """
     inputs = tf.keras.Input(shape=(1, img_shape[0], img_shape[1]))
 
     x = Conv2D(filters = 32, kernel_size = 3, strides = 2, padding = "same", activation="relu", data_format="channels_first")(inputs)
@@ -40,6 +55,9 @@ def classificator_model():
 
 
 def strip_futilities(data):
+    """
+    method returns trn_images and trn_labels for fit method
+    """
     images = []
     labels = []
     for i, item in enumerate(data):

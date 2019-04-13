@@ -78,8 +78,8 @@ def recursive_contour_divide(contour):
 
 def fit_ellipse(original, segmented, file_to_open = None):
     # find contours
-    _, contours, _ = cv2.findContours(segmented, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # windows shit
-    #contours, _ = cv2.findContours(segmented, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # this is how we do it
+    #_, contours, _ = cv2.findContours(segmented, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # windows shit
+    contours, _ = cv2.findContours(segmented, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # this is how we do it
     #print("cont:", np.shape(contours))
 
     # get max length contour
@@ -95,8 +95,8 @@ def fit_ellipse(original, segmented, file_to_open = None):
         return None
 
     # get reduced contour
-    reduced_contour = recursive_contour_divide(new_cont)
-
+    #reduced_contour = recursive_contour_divide(new_cont)
+    reduced_contour = new_cont
     # its bullshit, i did not hit her, i did not. oh hi mark!
     if reduced_contour is None:
         # print("Reduced is none")
@@ -115,7 +115,7 @@ def fit_ellipse(original, segmented, file_to_open = None):
     ellipse_center_y = bounding_rect[0][1]
     ellipse_majoraxis = max(bounding_rect[1]) / 2.0
     ellipse_minoraxis = min(bounding_rect[1]) / 2.0
-    ellipse_angle = bounding_rect[2]
+    ellipse_angle = bounding_rect[2] + 90
 
     # print them
     # print(ellipse_center_x)
@@ -158,15 +158,15 @@ if __name__ == '__main__':
         new_image =  np.uint8(np.clip(255/maxval * image, 0, 255))
 
         # threshold
-        k_size = 3
-        kernel = np.ones((k_size, k_size),np.float32) / k_size**2
-        dst = cv2.filter2D(new_image,-1,kernel)
-        # tmpImg = cv2.fastNlMeansDenoisingColored(cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR), h = 5, templateWindowSize = 5, searchWindowSize = 15)
-        # blur = cv2.GaussianBlur(cv2.cvtColor(tmpImg, cv2.COLOR_BGR2GRAY),(5,5),0)
-        blur = cv2.GaussianBlur(dst, (5, 5), 0)
+        # k_size = 3
+        # kernel = np.ones((k_size, k_size),np.float32) / k_size**2
+        # dst = cv2.filter2D(new_image,-1,kernel)
+        #tmpImg = cv2.fastNlMeansDenoisingColored(cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR), h = 5, templateWindowSize = 5, searchWindowSize = 15)
+        #blur = cv2.GaussianBlur(cv2.cvtColor(new_image, cv2.COLOR_BGR2GRAY),(5,5),0)
+        blur = cv2.GaussianBlur(new_image, (5, 5), 0)
 
         # blur
-        # ret,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        #ret,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
         ret, thresh = cv2.threshold(blur, 80, 255, 0)
         thresh = np.uint8(np.clip(thresh, 0, 255))
 

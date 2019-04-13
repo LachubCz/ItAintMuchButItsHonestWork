@@ -50,10 +50,6 @@ class DataSet(object):
             new_g_t = np.uint16(new_g_t)
             break
 
-    
-        
-        
-        
         return new_img, new_g_t
         
         
@@ -98,5 +94,14 @@ class DataSet(object):
 if __name__ == "__main__":
     trn_data = parse_data("./data/ground_truths_develop.csv", "./data/images/", "./data/ground_truths/")
     myData = DataSet(trn_data)
-    x, y = myData.getBatch(100)
-    print(x.shape, y.shape)
+    counter = 0
+    for e in range(100):
+        x, y = myData.getBatch(32)
+        for i, item in enumerate(x):
+            print(np.shape(x))
+            new = cv2.cvtColor(item[0], cv2.COLOR_GRAY2BGR)
+            if y[i] == 0:
+                cv2.imwrite("{}_F.png" .format(counter), new)
+            if y[i] == 1:
+                cv2.imwrite("{}_T.png" .format(counter), new)
+            counter += 1

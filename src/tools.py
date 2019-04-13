@@ -1,3 +1,15 @@
+#################################################################################
+# Description:  File contains several methods for variable usage
+#               
+# Authors:      Petr Buchal         <petr.buchal@lachub.cz>
+#               Martin Ivanco       <ivancom.fr@gmail.com>
+#               Vladimir Jerabek    <jerab.vl@gmail.com>
+#
+# Date:     2019/04/13
+# 
+# Note:     This source code is part of project created on UnIT HECKATHON
+#################################################################################
+
 import os
 import cv2
 import numpy as np
@@ -6,6 +18,9 @@ from image import Image
 from ellipse_fit_evaluation import __get_gt_ellipse_from_csv
 
 def parse_data(filename, data_path, ground_truths_path):
+    """
+    method parses csv file and loads images into structure Image
+    """
     with open(filename) as f:
         content = f.readlines()
 
@@ -40,6 +55,9 @@ def parse_data(filename, data_path, ground_truths_path):
 
 
 def perf_measure(y_actual, y_hat):
+    """
+    function returns TP, FP, TN, FN metrics score
+    """
     TP = 0
     FP = 0
     TN = 0

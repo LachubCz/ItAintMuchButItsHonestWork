@@ -22,7 +22,7 @@ def fitting_error(contour):
     
     # its a line! exterminate it!
     # print(min(bounding_rect[1]) / 2.0)
-    if cumulative_diff < 25 - math.log(min(bounding_rect[1]) * 8):
+    if cumulative_diff < 25 - math.log(min(bounding_rect[1]) * 10):
         # print(min(bounding_rect[1]) / 2.0)
         return 100000
 
@@ -76,7 +76,7 @@ def recursive_contour_divide(contour):
     
     return None
 
-def fit_ellipse(original, segmented):
+def fit_ellipse(original, segmented, file_to_open = None):
     # find contours
     # _, contours, _ = cv2.findContours(segmented, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # windows shit
     contours, _ = cv2.findContours(segmented, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # this is how we do it
@@ -91,7 +91,7 @@ def fit_ellipse(original, segmented):
     
     # no ellipse found
     if len(new_cont) < 5:
-        print("Less than five")
+        # print("Less than five")
         return None
 
     # get reduced contour
@@ -99,14 +99,14 @@ def fit_ellipse(original, segmented):
 
     # its bullshit, i did not hit her, i did not. oh hi mark!
     if reduced_contour is None:
-        print("Reduced is none")
+        # print("Reduced is none")
         reduced_contour = new_cont
 
     # fit ellipse
     bounding_rect = cv2.fitEllipse(reduced_contour)
 
     # draw ellipse
-    test = cv2.cvtColor(np.uint8(np.clip(original, 0, 255)), cv2.COLOR_GRAY2BGR)
+    test = cv2.cvtColor(np.uint8(np.clip(segmented, 0, 255)), cv2.COLOR_GRAY2BGR)
     cv2.drawContours(test, reduced_contour, -1, (0,255,0), 3)
     cv2.ellipse(test, bounding_rect, (0, 0, 255), 5)
 
@@ -125,8 +125,12 @@ def fit_ellipse(original, segmented):
     # print(ellipse_angle)
 
     # show image
-    cv2.imshow("test", test)
-    cv2.waitKey(0)
+    if __name__ == '__main__':
+        cv2.imshow("result", cv2.resize(test, None, fx = 0.5, fy = 0.5, interpolation = cv2.INTER_AREA))
+        if file_to_open is not None:
+            ref = cv2.imread(file_to_open, -1)
+            cv2.imshow("reference", cv2.resize(ref, None, fx = 0.5, fy = 0.5, interpolation = cv2.INTER_AREA))
+        cv2.waitKey(0)
 
     ellipse =  {
       "center": [ellipse_center_x, ellipse_center_y],
@@ -150,11 +154,22 @@ if __name__ == '__main__':
         parametres = item.split(',')
 
         image = cv2.imread(os.path.join("./data/images/", parametres[0]), -1)
+        maxval = max(image.ravel())
+        new_image =  np.uint8(np.clip(255/maxval * image, 0, 255))
+
         # threshold
-        # print(image.dtype, np.shape(image))
-        ret, thresh = cv2.threshold(image, 127, 255, 0)
+        k_size = 3
+        kernel = np.ones((k_size, k_size),np.float32) / k_size**2
+        dst = cv2.filter2D(new_image,-1,kernel)
+        # tmpImg = cv2.fastNlMeansDenoisingColored(cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR), h = 5, templateWindowSize = 5, searchWindowSize = 15)
+        # blur = cv2.GaussianBlur(cv2.cvtColor(tmpImg, cv2.COLOR_BGR2GRAY),(5,5),0)
+        blur = cv2.GaussianBlur(dst, (5, 5), 0)
+
+        # blur
+        # ret,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        ret, thresh = cv2.threshold(blur, 80, 255, 0)
         thresh = np.uint8(np.clip(thresh, 0, 255))
-        # cv2.imwrite("{}.png" .format(i), thresh)
+
 
         ####################
 
@@ -196,7 +211,7 @@ if __name__ == '__main__':
         #imwrite("{}.png" .format(i), thresh)
         #cv2.imshow("test", thresh)
         #cv2.waitKey(0)
-        res = fit_ellipse(image, thresh)
+        res = fit_ellipse(new_image, thresh, os.path.join("./data/ground_truths/", parametres[0][:parametres[0].rfind('.')] + ".png"))
         if res is None:
             print(parametres[0])
 

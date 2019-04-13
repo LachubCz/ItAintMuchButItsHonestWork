@@ -96,7 +96,17 @@ if __name__ == '__main__':
         true_values = []
         predicted_values = []
         for i, item in enumerate(data):
-            ret, thresh = cv2.threshold(item.image, 127, 255, 0)
+            maxval = max(item.image.ravel())
+            new_image =  np.uint8(np.clip(255/maxval * item.image, 0, 255))
+
+            # threshold
+            kernel = np.ones((3,3),np.float32)/25
+            dst = cv2.filter2D(new_image,-1,kernel)
+            tmpImg = cv2.fastNlMeansDenoisingColored(cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR), h = 5, templateWindowSize = 5, searchWindowSize = 15)
+            blur = cv2.GaussianBlur(cv2.cvtColor(tmpImg, cv2.COLOR_BGR2GRAY),(5,5),0)
+
+            # blur
+            ret,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
             thresh = np.uint8(np.clip(thresh, 0, 255))
 
             ellipse = fit_ellipse(item.image, thresh)

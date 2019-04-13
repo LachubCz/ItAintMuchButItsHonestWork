@@ -169,11 +169,12 @@ def fit_ellipse(original, segmented, file_to_open = None):
     # draw ellipse
     test = cv2.cvtColor(np.uint8(np.clip(original, 0, 255)), cv2.COLOR_GRAY2BGR)
     cv2.drawContours(test, reduced_contour, -1, (0,255,0), 3)
-    cv2.ellipse(test, bounding_rect, (0, 0, 255), 5)
+    # cv2.ellipse(test, bounding_rect, (0, 0, 255), 5)
+    cv2.ellipse(test, (bounding_rect[0][0], bounding_rect[0][0]), (max(bounding_rect[1]) / 2.0, min(bounding_rect[1]) / 2.0), bounding_rect[2], 0, 360, (0, 0, 255), 5)
 
     # count parameters
     ellipse_center_x = bounding_rect[0][0]
-    ellipse_center_y = bounding_rect[0][1]
+    ellipse_center_y = bounding_rect[0][0]
     ellipse_majoraxis = max(bounding_rect[1]) / 2.0
     ellipse_minoraxis = min(bounding_rect[1]) / 2.0
     ellipse_angle = bounding_rect[2]

@@ -41,7 +41,7 @@ def recursive_contour_divide(contour):
     print(contour)
     err = fitting_error(contour)
     print(err)
-    if err < 50:
+    if err < 400:
         return contour
     
     if len(contour) > 60:
@@ -58,24 +58,24 @@ def recursive_contour_divide(contour):
 
 def fit_ellipse(original, segmented):
     # find contours
-    # _, contours, _ = cv2.findContours(segmented, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # windows shit
+    #_, contours, _ = cv2.findContours(segmented, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # windows shit
     contours, _ = cv2.findContours(segmented, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) # this is how we do it
     #print("cont:", np.shape(contours))
 
     # get max length contour
-    max_length = 0
-    max_index = 0
-    for i in range(len(contours)):
-        if len(contours[i]) > max_length:
-            max_length = len(contours[i])
-            max_index = i
-    
+    new_cont = np.array([])
+    if len(contours) > 0:
+        new_cont = contours[0]
+        for i in range(len(contours)-1):
+            new_cont = np.concatenate((new_cont, contours[i]), axis=0)
+
     # no ellipse found
-    if max_length < 5:
+    if len(new_cont) < 5:
         return None
 
     # get reduced contour
-    reduced_contour = recursive_contour_divide(contours[max_index])
+    reduced_contour = recursive_contour_divide(new_cont)
+    
 
     # its bullshit, i did not hit her, i did not. oh hi mark!
     if reduced_contour is None:
@@ -87,7 +87,7 @@ def fit_ellipse(original, segmented):
     # draw ellipse
     test = cv2.cvtColor(np.uint8(np.clip(original, 0, 255)), cv2.COLOR_GRAY2BGR)
     cv2.drawContours(test, reduced_contour, -1, (0,255,0), 3)
-    print(max_length)
+    #print(max_length)
     print(len(reduced_contour))
     cv2.ellipse(test, bounding_rect, (0, 0, 255), 5)
 

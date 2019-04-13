@@ -90,7 +90,7 @@ if __name__ == '__main__':
             true_values.append(item.ellipse)
             score_sum += score
 
-            print("{} - {}" .format(item.filename, (round(score, 2))))
+            print("{} - {} - {} - {}" .format(item.filename, (round(score, 2)), prediction, item.ellipse))
 
         shutil.rmtree('./images_png')
         print("Overall score: {}/{} = {}%" .format((round(score_sum, 2)), len(data), round((score_sum/len(data))*100, 2)))
@@ -105,22 +105,41 @@ if __name__ == '__main__':
         plt.show()
     elif args.mode == "entry":
         filenames = [f for f in listdir(args.images_path) if isfile(join(args.images_path, f))]
+        
+        if not os.path.exists("./images_png"):
+            os.makedirs("./images_png")
+        create_graph("./models/tensorflow_inception_graph.pb")
+        model = get_model("./models/model.pkl")
+        
         with open(args.csv_output, mode='w', newline='') as output_csv:
             csv_writer = csv.writer(output_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             csv_writer.writerow(['filename', 'ellipse_center_x', 'ellipse_center_y',
                                  'ellipse_majoraxis', 'ellipse_minoraxis', 'ellipse_angle',
                                  'elapsed_time'])
+
             for i, item in enumerate(filenames):
                 image = cv2.imread(os.path.join(args.images_path, item), -1)
                 start = timer()
-                ret, thresh = cv2.threshold(image, 127, 255, 0)
-                thresh = np.uint8(np.clip(thresh, 0, 255))
-                ellipse = fit_ellipse(image, thresh)
+                
+                image_processed = image * np.uint16(65535.0 / max(image.ravel()))
+                image_processed = cv2.resize(image_processed, (960, 960), interpolation = cv2.INTER_AREA)
+                bgr = cv2.cvtColor(image_processed, cv2.COLOR_GRAY2BGR)
+                cv2.imwrite("./images_png/{}.png" .format(item[:-5]), bgr)
+                features = extract_feature(["./images_png/{}.png" .format(item[:-5])])
+                prediction = model.predict(features)[0]
+                if prediction == 0:
+                    ellipse = None
+                else:
+                    ret, thresh = cv2.threshold(image, 127, 255, 0)
+                    thresh = np.uint8(np.clip(thresh, 0, 255))
+                    ellipse = fit_ellipse(image, thresh)
+                os.remove("./images_png/{}.png" .format(item[:-5]))
                 end = timer()
                 elapsed_time = ((end - start)*1000)
                 if ellipse == None:
                     csv_writer.writerow([item, '', '', '', '', '', int(elapsed_time)])
                 else:
-                    csv_writer.writerow([item, round(ellipse['center'][0]), round(ellipse['center'][1]),
-                                         round(ellipse['axes'][0]), round(ellipse['axes'][1], 2),
+                    csv_writer.writerow([item, round(ellipse['center'][0], 2), round(ellipse['center'][1], 2),
+                                         round(ellipse['axes'][0], 2), round(ellipse['axes'][1], 2),
                                          int(ellipse['angle']), int(elapsed_time)])
+            shutil.rmtree('./images_png')

@@ -3,7 +3,6 @@ import csv
 import cv2
 import numpy as np
 
-
 def evaluate_ellipse_fit(image_filename, fit_ellipse, csv_filepath='ground_truths.csv'):
     """
     Evaluate ellipse fit by comparing its parameters to the ground truth ellipse's parameters from the CSV file.

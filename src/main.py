@@ -60,9 +60,9 @@ def get_args():
 
 if __name__ == '__main__':
     args = get_args()
-    data = parse_data(args.csv_input, args.images_path, args.ground_truths_path)
 
     if args.mode == "eval":
+        data = parse_data(args.csv_input, args.images_path, args.ground_truths_path)
         score_sum = 0
         true_values = []
         predicted_values = []

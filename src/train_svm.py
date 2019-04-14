@@ -38,10 +38,7 @@ def train_svm_classifer(features, labels, model_output_path):
 
     clf.fit(X_train, y_train)
 
-    #if os.path.exists(model_output_path):
     joblib.dump(clf.best_estimator_, model_output_path)
-    #else:
-    #    print("Cannot save trained svm model to {0}.".format(model_output_path))
 
     print("\nBest parameters set:")
     print(clf.best_params_)
@@ -50,7 +47,6 @@ def train_svm_classifer(features, labels, model_output_path):
 
     labels=sorted(list(set(labels)))
     print("\nConfusion matrix:")
-    #print("Labels: {0}\n".format(",".join(labels)))
     print(confusion_matrix(y_test, y_predict, labels=labels))
 
     print("\nClassification report:")

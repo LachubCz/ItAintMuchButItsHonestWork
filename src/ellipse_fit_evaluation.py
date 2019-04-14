@@ -1,3 +1,13 @@
+#################################################################################
+# Description:  File contains methods for evaluation
+#               
+# Authors:      Petr Walek
+#               Lukas Maly
+# 
+# Note:     This source code is part of competition assigment and
+#           was used as part of project created on UnIT extended 2019.
+#################################################################################
+
 import csv
 
 import cv2

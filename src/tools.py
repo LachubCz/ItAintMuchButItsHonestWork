@@ -7,10 +7,11 @@
 #
 # Date:     2019/04/13
 # 
-# Note:     This source code is part of project created on UnIT HECKATHON
+# Note:     This source code is part of project created on UnIT extended 2019
 #################################################################################
 
 import os
+
 import cv2
 import numpy as np
 

@@ -1,6 +1,6 @@
 #################################################################################
-# Description:  Class for generating batch data for training 
-#               clasification neural network
+# Description:  Class for generating augmented data for training of
+#               neural network and SVM
 #               
 # Authors:      Petr Buchal         <petr.buchal@lachub.cz>
 #               Martin Ivanco       <ivancom.fr@gmail.com>
@@ -8,21 +8,37 @@
 #
 # Date:     2019/04/13
 # 
-# Note:     This source code is part of project created on UnIT HECKATHON
+# Note:     This source code is part of project created on UnIT extended 2019.
 #################################################################################
 
-
-import numpy as np
-from image import Image
-from tools import parse_data
-import cv2
 import random
+import argparse
 from datetime import datetime
+
+import cv2
+import numpy as np
+from matplotlib import pyplot
 
 from keras.preprocessing.image import load_img
 from keras.preprocessing.image import img_to_array
 from keras.preprocessing.image import ImageDataGenerator
-from matplotlib import pyplot
+
+from image import Image
+from tools import parse_data
+
+def get_args():
+    """
+    method for parsing of arguments
+    """
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--batches', type="int", action="store", default=100,
+                        help='Number of generated batch of size 32.')
+
+    args = parser.parse_args()
+
+    return args
+
 
 #Class storing data for augmentation
 class DataSet(object):
@@ -71,7 +87,8 @@ class DataSet(object):
             break
 
         return new_img, new_g_t
-        
+
+
     #Function for striping unneeded data from Image class
     #@param: data   - List of Image class       ^-- for more info see image.py
     #@return: images        - numpy array of images of shape (n, 1, height, width)      %note: 16-bit grayscale
@@ -90,6 +107,7 @@ class DataSet(object):
             grand_truths.append(np.array([item.processed_ground_truths]))
 
         return np.array(images), np.array(labels), np.array(grand_truths)
+
 
     #Method for getting augmented data for training neural netowrk
     #@param batchSize   - nuber of images in one training epoche
@@ -119,16 +137,22 @@ class DataSet(object):
 
 
 if __name__ == "__main__":
+    args = parse_args()
+
     trn_data = parse_data("./data/ground_truths_develop.csv", "./data/images/", "./data/ground_truths/")
     myData = DataSet(trn_data)
+
+    if not os.path.exists("./images_png"):
+        os.makedirs("./images_png")
+
     counter = 0
-    for e in range(100):
+    for e in range(args.batches):
         x, y = myData.getBatch(32)
         for i, item in enumerate(x):
-            print(np.shape(x))
+            print("Generated batches: {}" .format(counter))
             new = cv2.cvtColor(item[0], cv2.COLOR_GRAY2BGR)
             if y[i] == 0:
-                cv2.imwrite("{}_F.png" .format(counter), new)
+                cv2.imwrite("./images_png/{}_F.png" .format(counter), new)
             if y[i] == 1:
-                cv2.imwrite("{}_T.png" .format(counter), new)
+                cv2.imwrite("./images_png/{}_T.png" .format(counter), new)
             counter += 1

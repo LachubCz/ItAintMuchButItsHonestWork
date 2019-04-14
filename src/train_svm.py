@@ -1,3 +1,14 @@
+#################################################################################
+# Description:  File contains methods for training of SVM
+#               
+# Authors:      May Yeung
+#
+# Date:     2016/10/21
+# 
+# Note:     This source code originally comes from https://bit.ly/2GcFtDG and
+#           was used as part of project created on UnIT extended 2019.
+#################################################################################
+
 import os
 
 import sklearn
@@ -6,7 +17,7 @@ from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.svm import SVC
 from sklearn.externals import joblib
 
-def train_svm_classifer(features, labels, model_output_path):
+def train_svm_classifer(features, labels, model_output_path, cross_validation_gen=25):
     """
     train_svm_classifer will train a SVM, saved the trained and SVM model and
     report the classification performance
@@ -34,7 +45,7 @@ def train_svm_classifer(features, labels, model_output_path):
 
     # 10-fold cross validation, use 4 thread as each fold and each parameter set can be train in parallel
     clf = grid_search.GridSearchCV(svm, param,
-            cv=25, n_jobs=4, verbose=3)
+            cv=cross_validation_gen, n_jobs=4, verbose=3)
 
     clf.fit(X_train, y_train)
 
@@ -53,7 +64,10 @@ def train_svm_classifer(features, labels, model_output_path):
     print(classification_report(y_test, y_predict))
 
 
-def get_model(model_weights):
-    clf = joblib.load(model_weights)
+def get_model(model):
+    """
+    returns loaded SVM model
+    """
+    clf = joblib.load(model)
 
     return clf

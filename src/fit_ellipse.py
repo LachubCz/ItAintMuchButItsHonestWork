@@ -1,7 +1,20 @@
+#################################################################################
+# Description:  File containing methods for ellipse fitting
+#               
+# Authors:      Petr Buchal         <petr.buchal@lachub.cz>
+#               Martin Ivanco       <ivancom.fr@gmail.com>
+#               Vladimir Jerabek    <jerab.vl@gmail.com>
+#
+# Date:     2019/04/13
+# 
+# Note:     This source code is part of project created on UnIT extended 2019.
+#################################################################################
+
 import os
+import math
+
 import cv2
 import numpy as np
-import math
 
 # deprecated
 def fitting_error(contour):
@@ -45,6 +58,7 @@ def fitting_error(contour):
         cumulative_diff += abs(v1s + v2s - a2)
     return cumulative_diff
 
+
 # deprecated
 def recursive_contour_divide(contour):
     err = fitting_error(contour)
@@ -64,6 +78,7 @@ def recursive_contour_divide(contour):
             return half2
     
     return None
+
 
 def sweet_mother_ellipse(image):
     # base params
@@ -107,6 +122,7 @@ def sweet_mother_ellipse(image):
         old_rect = ((bounding_rect[0][0], bounding_rect[0][1]), (bounding_rect[1][0], bounding_rect[1][1]), bounding_rect[2])
 
     return reduced_contour, old_rect
+
 
 def fit_ellipse(original, segmented, file_to_open = None):
     # fit ellipse

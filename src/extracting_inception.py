@@ -1,8 +1,21 @@
+#################################################################################
+# Description:  File contains methods for training of SVM
+#               
+# Authors:      May Yeung
+#
+# Date:     2016/10/21
+# 
+# Note:     This source code originally comes from https://bit.ly/2GcFtDG and
+#           was used as part of project created on UnIT extended 2019.
+#################################################################################
+
 import os
+
+import numpy as np
+
 import tensorflow as tf
 import tensorflow.python.platform
 from tensorflow.python.platform import gfile
-import numpy as np
 
 def create_graph(model_path):
     """

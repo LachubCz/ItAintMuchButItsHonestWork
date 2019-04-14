@@ -1,22 +1,27 @@
+#################################################################################
+# Description:  File containing methods for ellipse fitting
+#               
+# Authors:      Petr Buchal         <petr.buchal@lachub.cz>
+#               Martin Ivanco       <ivancom.fr@gmail.com>
+#               Vladimir Jerabek    <jerab.vl@gmail.com>
+#
+# Date:     2019/04/13
+# 
+# Note:     This source code is part of project created on UnIT extended 2019.
+#################################################################################
+
 import os
 from os import listdir
 from os.path import isfile, join
-import sys 
+import sys
+import csv
 import argparse
 
 import cv2
-import csv
 import shutil
 import numpy as np
 import matplotlib.pyplot as plt
 from timeit import default_timer as timer
-
-import warnings
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore",category=DeprecationWarning)
-import tensorflow as tf
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
-
 
 from tools import parse_data, perf_measure
 from ellipse_fit_evaluation import evaluate_ellipse_fit, __get_gt_ellipse_from_csv
@@ -25,6 +30,9 @@ from fit_ellipse import fit_ellipse
 from extracting_inception import create_graph, extract_features, extract_feature
 from train_svm import train_svm_classifer, get_model
 
+import tensorflow as tf
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 def get_args():
     """
     method for parsing of arguments
@@ -32,15 +40,15 @@ def get_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-m", "--mode", action="store", default=["eval", "entry"],
-                        help="application mode")
+                        help="Application mode.")
     parser.add_argument('--csv-input', action="store", 
-                        help='Text file with line names and transcripts for training.')
+                        help='Filename of input csv file containing training data.')
     parser.add_argument('--csv-output', action="store", 
-                        help='Text file with line names and transcripts for training.')
+                        help='Filename of output csv file containing competition data.')
     parser.add_argument('--images-path', action="store", required=True, 
-                        help='Text file with line names and transcripts for training.')
+                        help='Image folder path.')
     parser.add_argument('--ground-truths-path', action="store", 
-                        help='Text file with line names and transcripts for training.')
+                        help='Ground truths folder path.')
 
     args = parser.parse_args()
 
@@ -70,7 +78,7 @@ if __name__ == '__main__':
         if not os.path.exists("./images_png"):
             os.makedirs("./images_png")
         create_graph("./models/tensorflow_inception_graph.pb")
-        model = get_model("./models/model.pkl")
+        model = get_model("./models/model_svm.pkl")
 
         for i, item in enumerate(data):
             bgr = cv2.cvtColor(item.processed_image, cv2.COLOR_GRAY2BGR)
@@ -120,7 +128,7 @@ if __name__ == '__main__':
         if not os.path.exists("./images_png"):
             os.makedirs("./images_png")
         create_graph("./models/tensorflow_inception_graph.pb")
-        model = get_model("./models/model.pkl")
+        model = get_model("./models/model_svm.pkl")
         
         with open(args.csv_output, mode='w', newline='') as output_csv:
             csv_writer = csv.writer(output_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)

@@ -1,5 +1,5 @@
 #################################################################################
-# Description:  Class stores data for every picture
+# Description:  Class stores data from csv and image itself
 #               
 # Authors:      Petr Buchal         <petr.buchal@lachub.cz>
 #               Martin Ivanco       <ivancom.fr@gmail.com>
@@ -7,9 +7,10 @@
 #
 # Date:     2019/04/13
 # 
-# Note:     This source code is part of project created on UnIT HECKATHON
+# Note:     This source code is part of project created on UnIT extended 2019.
 #################################################################################
 
+#Class stores data from csv and image itself
 class Image(object):
     def __init__(self, image, processed_image, ground_truth, processed_ground_truths, filename, gt_ellipse_center_x, gt_ellipse_center_y, 
                  gt_ellipse_majoraxis, gt_ellipse_minoraxis, gt_ellipse_angle, image_width, 

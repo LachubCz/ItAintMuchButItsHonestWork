@@ -66,6 +66,41 @@ def get_args():
     return args
 
 
+def find_ellipse(model, image):
+    """
+    method finds ellipse
+    """
+    processed_image = image * np.uint16(65535.0 / max(image.ravel()))
+    processed_image = cv2.resize(processed_image, (960, 960), interpolation = cv2.INTER_AREA)
+
+    bgr = cv2.cvtColor(processed_image, cv2.COLOR_GRAY2BGR)
+
+    cv2.imwrite("./images_png/temp.png", bgr)
+    features = extract_feature(["./images_png/temp.png"])
+    os.remove("./images_png/temp.png")
+
+    prediction = model.predict(features)[0]
+    if prediction == 0:
+        ellipse = None
+    else:
+        maxval = max(image.ravel())
+        new_image =  np.uint8(np.clip(255/maxval * image, 0, 255))
+
+        # threshold
+        kernel = np.ones((3,3),np.float32)/25
+        dst = cv2.filter2D(new_image,-1,kernel)
+        tmpImg = cv2.fastNlMeansDenoisingColored(cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR), h = 5, templateWindowSize = 5, searchWindowSize = 15)
+        blur = cv2.GaussianBlur(cv2.cvtColor(tmpImg, cv2.COLOR_BGR2GRAY),(5,5),0)
+
+        # blur
+        ret,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        thresh = np.uint8(np.clip(thresh, 0, 255))
+
+        ellipse = fit_ellipse(image, thresh)
+
+    return ellipse, prediction
+
+
 if __name__ == '__main__':
     args = get_args()
 
@@ -78,31 +113,10 @@ if __name__ == '__main__':
         if not os.path.exists("./images_png"):
             os.makedirs("./images_png")
         create_graph("./models/tensorflow_inception_graph.pb")
-        model = get_model("./models/model_svm.pkl")
+        model = get_model("./models/svm_model.pkl")
 
         for i, item in enumerate(data):
-            bgr = cv2.cvtColor(item.processed_image, cv2.COLOR_GRAY2BGR)
-            cv2.imwrite("./images_png/{}.png" .format(item.filename[:-5]), bgr)
-            features = extract_feature(["./images_png/{}.png" .format(item.filename[:-5])])
-            prediction = model.predict(features)[0]
-            if prediction == 0:
-                ellipse = None
-            else:
-                maxval = max(item.image.ravel())
-                new_image =  np.uint8(np.clip(255/maxval * item.image, 0, 255))
-
-                # threshold
-                kernel = np.ones((3,3),np.float32)/25
-                dst = cv2.filter2D(new_image,-1,kernel)
-                tmpImg = cv2.fastNlMeansDenoisingColored(cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR), h = 5, templateWindowSize = 5, searchWindowSize = 15)
-                blur = cv2.GaussianBlur(cv2.cvtColor(tmpImg, cv2.COLOR_BGR2GRAY),(5,5),0)
-
-                # blur
-                ret,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-                thresh = np.uint8(np.clip(thresh, 0, 255))
-
-                ellipse = fit_ellipse(item.image, thresh)
-
+            ellipse, prediction = find_ellipse(model, item.image)
             score = evaluate_ellipse_fit(item.filename, ellipse, args.csv_input)
 
             predicted_values.append(prediction)
@@ -122,13 +136,15 @@ if __name__ == '__main__':
 
         plt.bar(list(dictionary.keys()), dictionary.values(), color='g')
         plt.show()
+
     elif args.mode == "entry":
         filenames = [f for f in listdir(args.images_path) if isfile(join(args.images_path, f))]
         
         if not os.path.exists("./images_png"):
             os.makedirs("./images_png")
+
         create_graph("./models/tensorflow_inception_graph.pb")
-        model = get_model("./models/model_svm.pkl")
+        model = get_model("./models/svm_model.pkl")
         
         with open(args.csv_output, mode='w', newline='') as output_csv:
             csv_writer = csv.writer(output_csv, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -138,38 +154,18 @@ if __name__ == '__main__':
 
             for i, item in enumerate(filenames):
                 image = cv2.imread(os.path.join(args.images_path, item), -1)
+
                 start = timer()
-                
-                image_processed = image * np.uint16(65535.0 / max(image.ravel()))
-                image_processed = cv2.resize(image_processed, (960, 960), interpolation = cv2.INTER_AREA)
-                bgr = cv2.cvtColor(image_processed, cv2.COLOR_GRAY2BGR)
-                cv2.imwrite("./images_png/{}.png" .format(item[:-5]), bgr)
-                features = extract_feature(["./images_png/{}.png" .format(item[:-5])])
-                prediction = model.predict(features)[0]
-                if prediction == 0:
-                    ellipse = None
-                else:
-                    maxval = max(image.ravel())
-                    new_image =  np.uint8(np.clip(255/maxval * image, 0, 255))
-
-                    # threshold
-                    kernel = np.ones((3,3),np.float32)/25
-                    dst = cv2.filter2D(new_image,-1,kernel)
-                    tmpImg = cv2.fastNlMeansDenoisingColored(cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR), h = 5, templateWindowSize = 5, searchWindowSize = 15)
-                    blur = cv2.GaussianBlur(cv2.cvtColor(tmpImg, cv2.COLOR_BGR2GRAY),(5,5),0)
-
-                    # blur
-                    ret,thresh = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-                    thresh = np.uint8(np.clip(thresh, 0, 255))
-
-                    ellipse = fit_ellipse(image, thresh)
-                os.remove("./images_png/{}.png" .format(item[:-5]))
+                ellipse, prediction = find_ellipse(model, image)
                 end = timer()
+
                 elapsed_time = ((end - start)*1000)
+
                 if ellipse == None:
                     csv_writer.writerow([item, '', '', '', '', '', int(elapsed_time)])
                 else:
                     csv_writer.writerow([item, round(ellipse['center'][0], 2), round(ellipse['center'][1], 2),
                                          round(ellipse['axes'][0], 2), round(ellipse['axes'][1], 2),
                                          int(ellipse['angle']), int(elapsed_time)])
+
             shutil.rmtree('./images_png')

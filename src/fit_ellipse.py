@@ -184,7 +184,7 @@ def fit_ellipse(original, segmented, file_to_open = None):
 
 
 if __name__ == '__main__':
-    with open("./data/ground_truths_develop.csv") as f:
+    with open("./data_training/ground_truths_develop.csv") as f:
         content = f.readlines()
 
     content = [x.strip() for x in content]
@@ -195,13 +195,13 @@ if __name__ == '__main__':
             continue
         parametres = item.split(',')
 
-        image = cv2.imread(os.path.join("./data/images/", parametres[0]), -1)
-        image = cv2.imread(os.path.join("./data/images/", parametres[0]), -1)
+        image = cv2.imread(os.path.join("./data_training/images/", parametres[0]), -1)
+        image = cv2.imread(os.path.join("./data_training/images/", parametres[0]), -1)
         image = image * np.uint16(65535.0 / max(image.ravel()))
         image = np.uint8(np.clip(255.0 / 65535.0 * image, 0, 255))
         blur = cv2.bilateralFilter(image, 12, 600, 600)
         ret, thresh = cv2.threshold(blur, 75, 255, 0)
 
-        res = fit_ellipse(image, thresh, os.path.join("./data/ground_truths/", parametres[0][:parametres[0].rfind('.')] + ".png"))
+        res = fit_ellipse(image, thresh, os.path.join("./data_training/ground_truths/", parametres[0][:parametres[0].rfind('.')] + ".png"))
         if res is None:
             print(parametres[0])

@@ -39,15 +39,15 @@ def get_args():
     """
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-m", "--mode", action="store", default=["eval", "entry"],
+    parser.add_argument("-m", "--mode", action="store", choices=["eval", "entry"], default="eval",
                         help="Application mode.")
-    parser.add_argument('--csv-input', action="store", 
+    parser.add_argument('--csv-input', action="store", default="./data_training/ground_truths_develop.csv",
                         help='Filename of input csv file containing training data.')
-    parser.add_argument('--csv-output', action="store", 
+    parser.add_argument('--csv-output', action="store", default="./submission.csv",
                         help='Filename of output csv file containing competition data.')
-    parser.add_argument('--images-path', action="store", required=True, 
+    parser.add_argument('--images-path', action="store", default="./data_training/images/",
                         help='Image folder path.')
-    parser.add_argument('--ground-truths-path', action="store", 
+    parser.add_argument('--ground-truths-path', action="store", default="./data_training/ground_truths/",
                         help='Ground truths folder path.')
 
     args = parser.parse_args()

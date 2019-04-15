@@ -139,7 +139,7 @@ class DataSet(object):
 if __name__ == "__main__":
     args = parse_args()
 
-    trn_data = parse_data("./data/ground_truths_develop.csv", "./data/images/", "./data/ground_truths/")
+    trn_data = parse_data("./data_training/ground_truths_develop.csv", "./data_training/images/", "./data_training/ground_truths/")
     myData = DataSet(trn_data)
 
     if not os.path.exists("./images_png"):

@@ -85,4 +85,4 @@ def perf_measure(y_actual, y_hat):
 
 
 if __name__ == '__main__':
-    parse_data("./data/ground_truths_develop.csv", "./data/images/", "./data/ground_truths/")
+    parse_data("./data_training/ground_truths_develop.csv", "./data_training/images/", "./data_training/ground_truths/")

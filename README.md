@@ -1,1 +1,1 @@
-<img src="https://raw.githubusercontent.com/LachubCz/ItAintMuchButItsHonestWork/master/images/meme.jpg?token=ARdWCT1Ng00yc_9Z11Sa2zGmbVCwKvi6ks5cuGH0wA%3D%3D" height="300"/>
+<img src="https://raw.githubusercontent.com/LachubCz/ItAintMuchButItsHonestWork/master/images/meme.jpg?token=AELVMCOHQCMN65DIT7ON2D2422FJS" height="300"/>

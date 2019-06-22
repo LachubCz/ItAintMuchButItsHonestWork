@@ -30,8 +30,8 @@ Usage
 
     --trn-data-size trn-data-size  |  name of file containing output from training
     --model-name model-name        |  name of output file containing graph
-    
-****
+
 <img height="280" src="https://raw.githubusercontent.com/LachubCz/ItAintMuchButItsHonestWork/master/images/meme.jpg">
 
+****
 ###### Created by: Petr Buchal, Martin Ivančo, Vladimír Jeřábek

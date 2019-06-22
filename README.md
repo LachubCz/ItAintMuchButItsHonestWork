@@ -1,4 +1,4 @@
-<h1><img height="60" src="https://raw.githubusercontent.com/LachubCz/ItAintMuchButItsHonestWork/master/images/UnIT_logo.png">&nbsp;<img height="60" src="https://raw.githubusercontent.com/LachubCz/ItAintMuchButItsHonestWork/master/images/logo.png">&nbsp;UnIT extended 2019 ItAintMuchButItsHonestWork</h1>
+<h1><img height="60" src="https://raw.githubusercontent.com/LachubCz/ItAintMuchButItsHonestWork/master/images/UnIT_logo.png">&nbsp;<img height="60" src="https://raw.githubusercontent.com/LachubCz/ItAintMuchButItsHonestWork/master/images/logo.png">&nbsp;UnIT extended 2019  &nbsp ItAintMuchButItsHonestWork</h1>
 
 You can acces UnIT extended 2019 hackaton assignment [here](https://github.com/LachubCz/ItAintMuchButItsHonestWork/blob/master/assignment.pdf). This repository contains source code created by group ItAintMuchButItsHonestWork. Based on tournament metrics we've reached succes rate of 76.89 % in recognizing ellipses and won first place.
 
@@ -31,7 +31,7 @@ Usage
     --trn-data-size trn-data-size  |  name of file containing output from training
     --model-name model-name        |  name of output file containing graph
 
-<img height="280" src="https://raw.githubusercontent.com/LachubCz/ItAintMuchButItsHonestWork/master/images/meme.jpg">
-
 ****
 ###### Created by: Petr Buchal, Martin Ivančo, Vladimír Jeřábek
+
+<img height="280" src="https://raw.githubusercontent.com/LachubCz/ItAintMuchButItsHonestWork/master/images/meme.jpg">
